@@ -5,26 +5,24 @@
  */
 
 
-use App\Concern\Sandbox;
 use App\Http\Transformers\TransformRequest;
 use App\Http\Transformers\TransformResponse;
-use Illuminate\Container\Container;
 use Illuminate\Events\Dispatcher;
 use Illuminate\Routing\Router;
 
 class Server
 {
-    private $router;
+//    private $router;
     private $container;
-    private $events;
+//    private $events;
 
     public function __construct()
     {
-        $this->container = Container::getInstance();
-        $this->events = new Dispatcher($this->container);
-        $router = new Router($this->events, $this->container);
-        require './routes/web.php';
-        $this->router = $router;
+        $this->container = \Illuminate\Container\Container::getInstance();
+//        $this->events = new Dispatcher($this->container);
+//        $router = new Router($this->events, $this->container);
+//        require './routes/web.php';
+//        $this->router = $router;
     }
 
     private function setProcessName($name)
@@ -101,10 +99,10 @@ class Server
     {
         $this->clearCache();
 
-        $this->container->singleton(Sandbox::class, function ($app) {
-            return new Sandbox($app);
-        });
-        $this->container->alias(Sandbox::class, 'swoole.sandbox');
+//        $this->container->singleton(Sandbox::class, function ($app) {
+//            return new Sandbox($app);
+//        });
+//        $this->container->alias(Sandbox::class, 'swoole.sandbox');
 
         if ($workerId >= $this->config['worker_num']) {
             $this->setProcessName($this->config['ps_name'] . '-task');
@@ -129,23 +127,31 @@ class Server
 //        $publicPath = $this->container['config']->get('swoole_http.server.public_path', base_path('public'));
 
         try {
-            // handle static file request first
+//             handle static file request first
 //            if ($handleStatic && TransformRequest::handleStatic($swooleRequest, $swooleResponse, $publicPath)) {
 //                return;
 //            }
 
+            \App\Rocket\Coroutine::setBaseId();
+
+
+
+
+            \App\Concern\Context::setApp(clone $this->container);
             $routingRequest = TransformRequest::make($swooleRequest)->getIlluminateRequest();
-            $this->container->instance('Illuminate\Http\Request', $routingRequest);
-            /** @var $sandbox Sandbox */
-//            $sandbox = app(Sandbox::class);
-//            $sandbox->
-            $routingResponse = $this->router->dispatch($routingRequest);
+            \App\Concern\Context::getApp()->instance('Illuminate\Http\Request', $routingRequest);
+            $router = new Router(new Dispatcher(\App\Concern\Context::getApp()), \App\Concern\Context::getApp());
+            require './routes/web.php';
+            $routingResponse = $router->dispatch($routingRequest);
             $response = TransformResponse::make($routingResponse, $swooleResponse);
             $response->send();
+
+
         } catch (Throwable $e) {
 
         } finally {
-
+            \App\Rocket\Coroutine::clear(co::getCid());
+            \App\Concern\Context::clear();
         }
     }
 

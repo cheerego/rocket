@@ -5,8 +5,9 @@
  * Date: 2018/12/20
  * Time: 上午10:20
  */
+
 namespace App\Concern;
-use Swoole\Coroutine;
+
 use Illuminate\Contracts\Container\Container;
 
 class Context
@@ -90,6 +91,6 @@ class Context
      */
     public static function getCoroutineId()
     {
-        return Coroutine::getuid();
+        return \App\Rocket\Coroutine::getPid();
     }
 }

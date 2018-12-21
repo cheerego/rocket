@@ -9,17 +9,18 @@
 namespace App\Http\Controllers;
 
 
+use App\Concern\Context;
+use App\Rocket\Coroutine;
 use Illuminate\Http\Request;
 
 class UserController
 {
     public function index()
     {
-        echo \co::getuid();
-        go(function () {
-            echo \co::getuid();
-            \co::sleep(10);
-            echo app(Request::class)->input('a');
+        $app = Context::getApp();
+        Coroutine::create(function () use($app){
+            \co::sleep(1);
+            var_dump(\request()->all());
         });
         return app(Request::class)->input('a');
     }
