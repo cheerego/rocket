@@ -41,12 +41,12 @@ if (!function_exists('app')) {
     function app($abstract = null, array $parameters = [])
     {
         if (is_null($abstract)) {
-            return \App\Concern\Context::getApp();
+            return \App\Rocket\Context::getApp();
         }
 
         return empty($parameters)
-            ? \App\Concern\Context::getApp()->make($abstract)
-            : \App\Concern\Context::getApp()->makeWith($abstract, $parameters);
+            ? \App\Rocket\Context::getApp()->make($abstract)
+            : \App\Rocket\Context::getApp()->makeWith($abstract, $parameters);
     }
 }
 

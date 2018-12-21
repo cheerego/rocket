@@ -7,6 +7,7 @@
 
 use App\Http\Transformers\TransformRequest;
 use App\Http\Transformers\TransformResponse;
+use App\Rocket\Context;
 use Illuminate\Events\Dispatcher;
 use Illuminate\Routing\Router;
 
@@ -14,6 +15,7 @@ class Server
 {
 //    private $router;
     private $container;
+
 //    private $events;
 
     public function __construct()
@@ -98,12 +100,6 @@ class Server
     public function onWorkerStart($server, $workerId)
     {
         $this->clearCache();
-
-//        $this->container->singleton(Sandbox::class, function ($app) {
-//            return new Sandbox($app);
-//        });
-//        $this->container->alias(Sandbox::class, 'swoole.sandbox');
-
         if ($workerId >= $this->config['worker_num']) {
             $this->setProcessName($this->config['ps_name'] . '-task');
         } else {
@@ -132,15 +128,13 @@ class Server
 //                return;
 //            }
 
-            \App\Rocket\Coroutine::setBaseId();
 
+            Context::setParentId();
 
-
-
-            \App\Concern\Context::setApp(clone $this->container);
+            Context::setApp(clone $this->container);
             $routingRequest = TransformRequest::make($swooleRequest)->getIlluminateRequest();
-            \App\Concern\Context::getApp()->instance('Illuminate\Http\Request', $routingRequest);
-            $router = new Router(new Dispatcher(\App\Concern\Context::getApp()), \App\Concern\Context::getApp());
+            Context::getApp()->instance('Illuminate\Http\Request', $routingRequest);
+            $router = new Router(new Dispatcher(Context::getApp()), Context::getApp());
             require './routes/web.php';
             $routingResponse = $router->dispatch($routingRequest);
             $response = TransformResponse::make($routingResponse, $swooleResponse);
@@ -150,8 +144,9 @@ class Server
         } catch (Throwable $e) {
 
         } finally {
-            \App\Rocket\Coroutine::clear(co::getCid());
-            \App\Concern\Context::clear();
+            // 这里的顺序很重要
+            Context::clearAppsAndDatas();
+            Context::clearIdMaps();
         }
     }
 

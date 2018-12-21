@@ -9,17 +9,15 @@
 namespace App\Http\Controllers;
 
 
-use App\Concern\Context;
-use App\Rocket\Coroutine;
+use App\Rocket\Context;
 use Illuminate\Http\Request;
 
 class UserController
 {
     public function index()
     {
-        $app = Context::getApp();
-        Coroutine::create(function () use($app){
-            \co::sleep(1);
+
+        Context::coroutine(function () {
             var_dump(\request()->all());
         });
         return app(Request::class)->input('a');
