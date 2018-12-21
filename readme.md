@@ -33,15 +33,21 @@ $router->get('/a', 'App\Http\Controllers\UserController@index');
 
 class UserController
 {
-    public function index()
-    {
-
-        Context::coroutine(function () {
-            \co::sleep(5);
-            var_dump(\request()->all());
-        });
-        return app(Request::class)->input('a');
-    }
+      public function index(Request $request)
+      {
+          go(function () use ($request) {
+              \co::sleep(10);
+              var_dump(\request()->all());
+          });
+          Context::coroutine(function () {
+              \co::sleep(10);
+              var_dump(\request()->all());
+          });
+          return app(Request::class)->input('a');
+      }
 }
 ```
-每一个协程自己都会有自己的一份容器实例，不会收到父协程退出和全局变量的影响的印象
+每一个协程自己都会有自己的一份容器实例，不会收到父协程退出和全局变量的影响的印象。
+使用协程可以使用swoole的原生方式，这个方式是没有自己独有的容器的，只能通过 use (xxx) 来使用。
+如果使用Context::coroutine 来创建协程，每一个协程都具有自己独有的容器
+

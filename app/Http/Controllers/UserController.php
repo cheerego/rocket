@@ -14,9 +14,14 @@ use Illuminate\Http\Request;
 
 class UserController
 {
-    public function index()
+    public function index(Request $request)
     {
 
+
+        go(function () use ($request) {
+            \co::sleep(10);
+            var_dump(\request()->all());
+        });
         Context::coroutine(function () {
             \co::sleep(10);
             var_dump(\request()->all());
