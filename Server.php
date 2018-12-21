@@ -13,18 +13,26 @@ use Illuminate\Routing\Router;
 
 class Server
 {
-//    private $router;
     private $container;
 
-//    private $events;
+    private static $routeCollection;
 
     public function __construct()
     {
         $this->container = \Illuminate\Container\Container::getInstance();
-//        $this->events = new Dispatcher($this->container);
-//        $router = new Router($this->events, $this->container);
-//        require './routes/web.php';
-//        $this->router = $router;
+    }
+
+    public static function getRouteCollection()
+    {
+        if (static::$routeCollection instanceof \Illuminate\Routing\RouteCollection) {
+            return static::$routeCollection;
+        }
+        $container = new \Illuminate\Container\Container();
+        $event = new Dispatcher($container);
+        $router = new Router($event, $container);
+        require './routes/web.php';
+        static::$routeCollection = $router->getRoutes();
+        return static::$routeCollection;
     }
 
     private function setProcessName($name)
@@ -135,7 +143,7 @@ class Server
             $routingRequest = TransformRequest::make($swooleRequest)->getIlluminateRequest();
             Context::getApp()->instance('Illuminate\Http\Request', $routingRequest);
             $router = new Router(new Dispatcher(Context::getApp()), Context::getApp());
-            require './routes/web.php';
+            $router->setRoutes(static::getRouteCollection());
             $routingResponse = $router->dispatch($routingRequest);
             $response = TransformResponse::make($routingResponse, $swooleResponse);
             $response->send();
