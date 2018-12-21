@@ -31,19 +31,13 @@ class UserController
 {
     public function index()
     {
-        go(function () {
-            \co::sleep(10);
-            echo app(Request::class)->input('a');
+
+        Context::coroutine(function () {
+            \co::sleep(5);
+            var_dump(\request()->all());
         });
         return app(Request::class)->input('a');
     }
 }
-
-
 ```
-
-
-协程可以使用，但是使用容器时候像上面例子，快速的访问 `http://localhost:9501/a?a=1``http://localhost:9501/a?a=2`，结果都是两次2
-
-
-
+每一个协程都有容器的一份clone自己独有，不会导致下一次的request 影响上一次的

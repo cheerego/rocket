@@ -18,6 +18,7 @@ class UserController
     {
 
         Context::coroutine(function () {
+            \co::sleep(5);
             var_dump(\request()->all());
         });
         return app(Request::class)->input('a');

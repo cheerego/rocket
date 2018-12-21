@@ -9,8 +9,6 @@
 namespace App\Rocket;
 
 
-use Illuminate\Support\Facades\App;
-
 class Context
 {
     public static $idMaps = [];
@@ -38,13 +36,14 @@ class Context
     public static function coroutine(\Closure $cb)
     {
         $parent_id = static::getCoId();
-        $parentApp = Context::getApp();
-        return go(function () use ($cb, $parent_id) {
+        $app = clone Context::getApp();
+        return go(function () use ($cb, $parent_id, $app) {
             $child_id = static::getCoId();
-
+            static::$apps[$child_id] = $app;
             static::$idMaps[$child_id] = static::$idMaps[$parent_id];
             $cb();
             unset(static::$idMaps[$child_id]);
+            unset(static::$apps[$child_id]);
         });
     }
 
@@ -56,7 +55,7 @@ class Context
 
     public static function getApp()
     {
-        return static::$apps[static::getPid()];
+        return static::$apps[static::getCoId()];
     }
 
 
