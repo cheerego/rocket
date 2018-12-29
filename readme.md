@@ -1,6 +1,10 @@
 # Rocket 
 ## Swoole with laravel component
-### now It is like toy
+### now It is like a toy
+
+### 目前实现
+* laravel routing
+* 每一协程都有自己的 Container
 
 ```javascript
 php index.php
